@@ -15,3 +15,7 @@ export { LocaleFormatService } from './lib/locale-format.service';
 export { LocaleDatePipe } from './lib/pipes/locale-date.pipe';
 export { LocaleNumberPipe } from './lib/pipes/locale-number.pipe';
 export { LocaleRelativeTimePipe } from './lib/pipes/locale-relative-time.pipe';
+export { AppDirectionality } from './lib/app-directionality';
+export { DirectionService } from './lib/direction.service';
+export { provideAppDirection } from './lib/provide-app-direction';
+export { detectDirection } from './lib/detect-direction';

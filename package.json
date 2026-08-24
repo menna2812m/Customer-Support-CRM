@@ -69,6 +69,7 @@
   },
   "nx": {},
   "dependencies": {
+    "@angular/cdk": "~22.0.7",
     "@angular/common": "~22.0.4",
     "@angular/compiler": "~22.0.4",
     "@angular/core": "~22.0.4",
