@@ -13,8 +13,10 @@
     "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "strict": false,
-    "paths": {}
+    "strict": true,
+    "paths": {
+      "@crm/shared/config": ["./libs/shared/config/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
