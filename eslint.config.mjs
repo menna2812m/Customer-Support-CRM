@@ -68,7 +68,9 @@ export default [
       ],
 
       // --- PrimeNG boundary (spec sections 4.3, 9.4) ---
-      // Overridden to 'off' only in libs/shared/ui/eslint.config.mjs.
+      // --- MSW node/browser boundary (task 3 review, finding 2) ---
+      // Overridden to 'off' only in libs/shared/ui/eslint.config.mjs and
+      // libs/shared/testing/eslint.config.mjs respectively.
       'no-restricted-imports': [
         'error',
         {
@@ -78,6 +80,14 @@ export default [
               message:
                 'PrimeNG may only be imported inside libs/shared/ui (spec sections 4.3, 9.4). ' +
                 'Consume it through a shared/ui component instead.',
+            },
+            {
+              group: ['msw/node'],
+              message:
+                'msw/node may only be imported inside libs/shared/testing. It pulls in Node-only ' +
+                'APIs and must never reach a browser bundle; consume the MSW harness through ' +
+                '@crm/shared/testing (node/test code) or the future @crm/shared/testing/browser ' +
+                'entry point (browser code) instead.',
             },
           ],
         },

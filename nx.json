@@ -51,9 +51,9 @@
     {
       "plugin": "@nx/vitest",
       "options": {
-        "testTargetName": "vitest:test",
+        "testTargetName": "test",
         "ciTargetName": "test-ci",
-        "testMode": "watch"
+        "testMode": "run"
       }
     }
   ],
