@@ -2,33 +2,26 @@ import { HttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { APP_CONFIG } from '@crm/shared/config';
 import {
+  ACTIVE_SCOPE_PROVIDER,
   FRONTEND_REQUEST_ID_HEADER,
+  LOCALE_PREFERENCE_PROVIDER,
   provideHttpInfrastructure,
+  scopeBound,
   SESSION_CREDENTIAL_PROVIDER,
+  type ActiveScope,
 } from '../index';
 
+// `shared/http` does not depend on `@crm/shared/config` / `APP_CONFIG`: nothing
+// in this library reads the API base URL. Applying `apiBaseUrl` to outbound
+// requests is an open item for whoever makes the first cross-origin call.
 describe('provideHttpInfrastructure', () => {
   let http: HttpClient;
   let backend: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        {
-          provide: APP_CONFIG,
-          useValue: {
-            apiBaseUrl: 'http://localhost/api',
-            socketUrl: 'ws://localhost/ws',
-            enabledChannels: [],
-            enabledAiCapabilities: [],
-            featureFlagDefaults: {},
-          },
-        },
-        provideHttpInfrastructure(),
-        provideHttpClientTesting(),
-      ],
+      providers: [provideHttpInfrastructure(), provideHttpClientTesting()],
     });
     http = TestBed.inject(HttpClient);
     backend = TestBed.inject(HttpTestingController);
@@ -58,5 +51,105 @@ describe('provideHttpInfrastructure', () => {
     const provider = TestBed.inject(SESSION_CREDENTIAL_PROVIDER);
     const unchanged = { headers: { keys: () => [] } } as never;
     expect(provider.authorize(unchanged)).toBe(unchanged);
+  });
+});
+
+/**
+ * Scope attachment is OPT-IN per request, never global (spec section 8.3).
+ * A request that does not opt in must go out completely unmodified — that
+ * safety property has no other regression protection, so it is pinned here
+ * through the real chain built by `provideHttpInfrastructure()`.
+ */
+describe('scope interceptor via provideHttpInfrastructure', () => {
+  let backend: HttpTestingController;
+
+  function harness(activeScope: ActiveScope | null) {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpInfrastructure(),
+        provideHttpClientTesting(),
+        { provide: ACTIVE_SCOPE_PROVIDER, useValue: { current: () => activeScope } },
+      ],
+    });
+    const http = TestBed.inject(HttpClient);
+    backend = TestBed.inject(HttpTestingController);
+    return http;
+  }
+
+  it('carries no departmentId/branchId param when the request did not opt in', () => {
+    const http = harness({ departmentId: 'dept-1', branchId: 'branch-1' });
+
+    http.get('/api/x').subscribe();
+
+    const request = backend.expectOne('/api/x');
+    expect(request.request.params.has('departmentId')).toBe(false);
+    expect(request.request.params.has('branchId')).toBe(false);
+  });
+
+  it('attaches departmentId and branchId when opted in with an active scope', () => {
+    const http = harness({ departmentId: 'dept-1', branchId: 'branch-1' });
+
+    http.get('/api/x', { context: scopeBound() }).subscribe();
+
+    const request = backend.expectOne((r) => r.url === '/api/x');
+    expect(request.request.params.get('departmentId')).toBe('dept-1');
+    expect(request.request.params.get('branchId')).toBe('branch-1');
+  });
+
+  it('goes out unmodified when opted in but there is no active scope', () => {
+    const http = harness(null);
+
+    http.get('/api/x', { context: scopeBound() }).subscribe();
+
+    const request = backend.expectOne('/api/x');
+    expect(request.request.params.has('departmentId')).toBe(false);
+    expect(request.request.params.has('branchId')).toBe(false);
+  });
+
+  it('does not disturb params the caller already set when opting in', () => {
+    const http = harness({ departmentId: 'dept-1', branchId: 'branch-1' });
+
+    http.get('/api/x', { context: scopeBound(), params: { foo: 'bar' } }).subscribe();
+
+    const request = backend.expectOne((r) => r.url === '/api/x');
+    expect(request.request.params.get('foo')).toBe('bar');
+    expect(request.request.params.get('departmentId')).toBe('dept-1');
+    expect(request.request.params.get('branchId')).toBe('branch-1');
+  });
+});
+
+/** Locale header reflects whatever the locale preference provider reports. */
+describe('locale interceptor via provideHttpInfrastructure', () => {
+  it('sends Accept-Language from a custom LOCALE_PREFERENCE_PROVIDER', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpInfrastructure(),
+        provideHttpClientTesting(),
+        { provide: LOCALE_PREFERENCE_PROVIDER, useValue: { current: () => 'ar' } },
+      ],
+    });
+    const http = TestBed.inject(HttpClient);
+    const backend = TestBed.inject(HttpTestingController);
+
+    http.get('/api/x').subscribe();
+
+    const request = backend.expectOne('/api/x');
+    expect(request.request.headers.get('Accept-Language')).toBe('ar');
+  });
+
+  it('sends the no-op default locale (en) when nothing overrides the provider', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [provideHttpInfrastructure(), provideHttpClientTesting()],
+    });
+    const http = TestBed.inject(HttpClient);
+    const backend = TestBed.inject(HttpTestingController);
+
+    http.get('/api/x').subscribe();
+
+    const request = backend.expectOne('/api/x');
+    expect(request.request.headers.get('Accept-Language')).toBe('en');
   });
 });

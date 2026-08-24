@@ -11,8 +11,13 @@ export interface AppError {
   readonly details?: unknown;
 }
 
-/** Transient statuses only. Business errors and ordinary 4xx are never retriable (spec section 8.2). */
-const RETRIABLE_STATUSES = new Set([0, 429, 502, 503, 504]);
+/**
+ * Transient statuses only. Business errors and ordinary 4xx are never retriable
+ * (spec section 8.2). Single source of truth: `retryInterceptor` imports this
+ * same set so "what AppError.retriable reports" and "what actually gets
+ * retried" cannot silently drift apart.
+ */
+export const RETRIABLE_STATUSES = new Set([0, 429, 502, 503, 504]);
 
 interface ErrorEnvelope {
   code?: string;

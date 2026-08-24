@@ -5,9 +5,9 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { retry, timer } from 'rxjs';
+import { RETRIABLE_STATUSES } from '../app-error';
 
 const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
-const RETRIABLE_STATUSES = new Set([0, 429, 502, 503, 504]);
 
 /** Capped attempts and capped backoff (spec section 8.2). */
 const MAX_RETRIES = 2;
