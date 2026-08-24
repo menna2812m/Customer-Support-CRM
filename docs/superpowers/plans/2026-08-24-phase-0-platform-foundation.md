@@ -2298,8 +2298,20 @@ export function provideAppDirection(): EnvironmentProviders {
  * Prefer `dir="auto"` in templates; use this only where component logic
  * genuinely needs the computed direction value (spec section 9.3).
  */
-const STRONG_RTL = /[֑-߿‏‫‮יִ-﷽ﹰ-ﻼ]/;
-const STRONG_LTR = /[A-Za-zÀ-ʸ̀-֐]/;
+// NOTE (corrected 2026-08-25): the original text of this plan carried literal
+// bidi control characters inside these regexes — including U+202E RIGHT-TO-LEFT
+// OVERRIDE. That is the Trojan Source pattern: source that renders one way to a
+// human reviewer and compiles another way. An implementer pasting it reproduced
+// the contamination. Express Unicode ONLY as ASCII escapes, never as glyphs.
+//
+// The block-range approach below was also WRONG on its own terms: it matched
+// every code point in those blocks, so Arabic-Indic digits, combining marks, and
+// Arabic punctuation counted as "strong". Narrow to letters of RTL scripts —
+// a script-and-letter intersection — so weak and neutral characters are skipped
+// exactly like their ASCII counterparts. Cover Arabic, Hebrew, Syriac, Thaana,
+// and N'Ko at minimum, and keep Arabic Presentation Forms letters working.
+const STRONG_RTL = /* script-and-letter intersection, ASCII escapes only */;
+const STRONG_LTR = /\p{Letter}/u; /* excludes digits, marks, punctuation, symbols */
 
 export function detectDirection(text: string): 'rtl' | 'ltr' {
   for (const character of text) {
