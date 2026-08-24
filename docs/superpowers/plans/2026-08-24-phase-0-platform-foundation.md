@@ -44,7 +44,7 @@ The spec's open-questions register (section 13) stays authoritative. This plan d
 
 | Spec ID | Question | Blocks at | Why exactly there | If unanswered |
 |---|---|---|---|---|
-| **B4** | Canonical API contract ownership | **Task 3** | Task 3 writes the draft contract and makes it the source MSW handlers validate against. Its permanent home and change-ownership process must be agreed before other libraries encode assumptions about it | Task 3 cannot start. Tasks 1–2 are unaffected |
+| **B4** | ~~Canonical API contract ownership~~ | ~~Task 3~~ | **RESOLVED 2026-08-24.** `docs/api/openapi.yaml` in this repository; jointly owned by frontend and backend; changed by pull request; breaking or shape changes need review from both sides; the document is the single source of truth and generated clients, DTOs, mocks, and server artifacts are consumers, never competing sources; may later move to a contracts repository without changing the ownership model | Not blocking |
 | **B3** | Browser support matrix | **Task 15** | Task 15 defines design tokens and the logical-property CSS strategy, whose fallbacks depend on the supported browser floor | Tasks 1–14 proceed on the Angular default browserslist. Task 15 cannot start |
 | **B2** | Brand and design tokens (or explicit approval to use temporary placeholder tokens) | **Task 15** | Task 15 generates the PrimeNG theme *from* tokens; the token model is what every later component consumes | Task 15 cannot start unless the user explicitly approves temporary placeholder tokens |
 | **B1** | Department and branch relationship (nested which way, or orthogonal; multi-membership) | **Task 12** | Task 12 builds `ScopeContextService` and the `HttpContext` scope policy, whose data shape is exactly this relationship. Task 18's scope switcher consumes it | Tasks 1–11 and 13–17 proceed. Task 12 cannot start; Task 18 builds every part of the shell except the switcher |
@@ -60,7 +60,11 @@ The spec's open-questions register (section 13) stays authoritative. This plan d
 
 ### Plan-level clarification requiring user confirmation
 
-Spec section 12.1 lists `PermissionGate` among `shared/ui` primitives. This plan places the `*appHasPermission` directive in **`shared/permissions`** (Task 11) instead, because putting it in `shared/ui` would make the design-system library depend on the permission engine and invert the intended dependency direction. Everything else in the section 12.1 `shared/ui` list stays in `shared/ui`. **Confirm this placement when reviewing the plan.**
+Spec section 12.1 lists `PermissionGate` among `shared/ui` primitives. This plan places the `*appHasPermission` directive in **`shared/permissions`** (Task 11) instead, because putting it in `shared/ui` would make the design-system library depend on the permission engine and invert the intended dependency direction. Everything else in the section 12.1 `shared/ui` list stays in `shared/ui`.
+
+**CONFIRMED 2026-08-24:** `*appHasPermission` belongs in `shared/permissions`; `shared/ui` must not depend on the permission engine.
+
+**Related scope note.** Spec section 4.2's rule that a `ui` library injects no services beyond translation constrains **`<domain>/ui`** libraries. It does not constrain `libs/shared/ui`, whose documented contents (spec section 12.1) include the application shell. `libs/shared/ui` carries `type:ui` so features and applications may import it, and its shell components may inject `NavigationService`, `SessionStore`, `ScopeContextService`, and `RealtimeService`. Its one hard constraint remains the PrimeNG boundary.
 
 ---
 
@@ -74,7 +78,7 @@ Created across the plan, in creation order. Nothing else is created in Phase 0.
 | `apps/agent-app/` | Agent/admin shell: bootstrap, providers, root routes | 1, 19 |
 | `apps/portal-app/` | Customer portal shell | 1, 20 |
 | `apps/agent-app-e2e/`, `apps/portal-app-e2e/` | Playwright suites | 1, 21 |
-| `docs/api/openapi.draft.yaml` | Draft canonical API contract | 3 |
+| `docs/api/openapi.yaml` | Draft canonical API contract | 3 |
 | `libs/shared/config/` | Runtime configuration type, loader, secret assertion | 2 |
 | `libs/shared/testing/` | MSW harness, handlers, provisional fixtures | 3, 10 |
 | `libs/shared/http/` | `AppError`, interceptor chain, scope policy, provider composition | 4, 8, 9, 12 |
@@ -314,7 +318,10 @@ Record the convention in `docs/api/../..`-adjacent developer notes as part of th
 
 - [ ] **Step 9: Write the `.gitignore`**
 
+The repository already has a `.gitignore` containing `.superpowers/`. **Extend it; do not overwrite it** — that entry keeps the execution scratch workspace out of git.
+
 ```gitignore
+.superpowers/
 node_modules
 dist
 tmp
@@ -639,7 +646,7 @@ depth. Spec section 10.2."
 This task defines only the **envelope and bootstrap** contract. It defines no domain resources — those arrive with their phases.
 
 **Files:**
-- Create: `docs/api/openapi.draft.yaml`
+- Create: `docs/api/openapi.yaml`
 - Create: `libs/shared/testing/src/lib/handlers.ts`
 - Create: `libs/shared/testing/src/lib/msw-node.ts`
 - Create: `libs/shared/testing/src/lib/contract.spec.ts`
@@ -667,7 +674,7 @@ npm install --save-dev msw ajv ajv-formats @apidevtools/swagger-parser
 - [ ] **Step 2: Write the draft contract**
 
 ```yaml
-# docs/api/openapi.draft.yaml
+# docs/api/openapi.yaml
 openapi: 3.1.0
 info:
   title: Customer Support CRM API (draft)
@@ -677,8 +684,15 @@ info:
     backend (spec section 8.5). Phase 0 defines envelopes and bootstrap only;
     domain resources are added by the phase that introduces them.
 
-    STATUS: draft. The end state is one canonical contract consumed by frontend,
-    backend, mocks, and tests. Ownership is open question B4.
+    OWNERSHIP (B4, resolved 2026-08-24): this document is the CANONICAL contract
+    and the single source of truth. It lives in this repository at
+    docs/api/openapi.yaml and is jointly owned by frontend and backend. Changes
+    are made through pull requests; breaking or API-shape changes require review
+    from both a frontend and a backend representative. Generated clients, DTOs,
+    mocks, and server artifacts are CONSUMERS of this document and must never
+    become competing sources of truth. If repository separation later makes this
+    workflow difficult, the contract may move to a dedicated contracts
+    repository without changing the ownership model.
 
 paths:
   /me:
@@ -830,7 +844,7 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import Ajv, { type ValidateFunction } from 'ajv';
 import addFormats from 'ajv-formats';
 
-const CONTRACT_PATH = join(process.cwd(), 'docs/api/openapi.draft.yaml');
+const CONTRACT_PATH = join(process.cwd(), 'docs/api/openapi.yaml');
 
 let cache: Record<string, object> | null = null;
 const compiled = new Map<string, ValidateFunction>();
@@ -5017,7 +5031,39 @@ export class FormFieldComponent {
 }
 ```
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [ ] **Step 6: Add the validation translation keys**
+
+`ValidationMessagePipe` maps every Angular validation error to `validation.<errorName>`. Those keys must exist, or Task 5's missing-key handler throws in development. Add to all four translation documents (`apps/agent-app/public/i18n/{en,ar}.json` and the portal's pair):
+
+```json
+{
+  "validation": {
+    "required": "This field is required",
+    "email": "Enter a valid email address",
+    "minlength": "This value is too short",
+    "maxlength": "This value is too long",
+    "min": "This value is too small",
+    "max": "This value is too large",
+    "pattern": "This value has the wrong format"
+  }
+}
+```
+
+```json
+{
+  "validation": {
+    "required": "هذا الحقل مطلوب",
+    "email": "أدخل بريدًا إلكترونيًا صحيحًا",
+    "minlength": "هذه القيمة قصيرة جدًا",
+    "maxlength": "هذه القيمة طويلة جدًا",
+    "min": "هذه القيمة صغيرة جدًا",
+    "max": "هذه القيمة كبيرة جدًا",
+    "pattern": "تنسيق هذه القيمة غير صحيح"
+  }
+}
+```
+
+- [ ] **Step 7: Run the tests to verify they pass**
 
 ```bash
 npx nx test shared-ui
@@ -5027,7 +5073,7 @@ npm run lint:styles
 
 Expected: PASS, all eight cases.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add -A
@@ -5509,7 +5555,19 @@ export class LoadingSkeletonComponent {
 }
 ```
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [ ] **Step 6: Add the action translation keys**
+
+`ConfirmDialogComponent` defaults to `actions.confirm` and `actions.cancel`. Add to all four translation documents:
+
+```json
+{ "actions": { "confirm": "Confirm", "cancel": "Cancel", "save": "Save", "close": "Close" } }
+```
+
+```json
+{ "actions": { "confirm": "تأكيد", "cancel": "إلغاء", "save": "حفظ", "close": "إغلاق" } }
+```
+
+- [ ] **Step 7: Run the tests to verify they pass**
 
 ```bash
 npx nx test shared-ui
@@ -5518,7 +5576,7 @@ npm run lint:styles
 
 Expected: PASS, all eight cases.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add -A
@@ -6712,7 +6770,10 @@ Start the MSW browser worker in `main.ts` when the runtime config says so:
 ```ts
 // apps/agent-app/src/main.ts  (extended)
 async function startMocks(): Promise<void> {
-  if (!import.meta.env.DEV) {
+  // isDevMode(), not import.meta.env — Angular's build does not guarantee Vite's
+  // import.meta.env, and a mock layer that silently fails to start is worse than
+  // one that never existed.
+  if (!isDevMode()) {
     return;
   }
   const { worker } = await import('@crm/shared/testing/browser');
