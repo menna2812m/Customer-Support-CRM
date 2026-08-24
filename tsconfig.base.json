@@ -15,7 +15,8 @@
     "skipDefaultLibCheck": true,
     "strict": true,
     "paths": {
-      "@crm/shared/config": ["./libs/shared/config/src/index.ts"]
+      "@crm/shared/config": ["./libs/shared/config/src/index.ts"],
+      "@crm/shared/testing": ["./libs/shared/testing/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
