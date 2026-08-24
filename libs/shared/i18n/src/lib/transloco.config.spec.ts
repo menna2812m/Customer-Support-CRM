@@ -13,7 +13,13 @@ describe('application translation', () => {
   let transloco: TranslocoService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideAppTranslation()] });
+    // provideHttpClientTesting() keeps the eager fallback-language load (see
+    // "eager fallback language loading" below) from reaching a real network
+    // backend here; these tests never flush it, which is fine - nothing here
+    // asserts against it.
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideAppTranslation()],
+    });
     transloco = TestBed.inject(TranslocoService);
   });
 
@@ -61,7 +67,12 @@ describe('ReportingMissingHandler in production', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideAppTranslation(), { provide: IS_DEV_MODE, useValue: false }],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideAppTranslation(),
+        { provide: IS_DEV_MODE, useValue: false },
+      ],
     });
     transloco = TestBed.inject(TranslocoService);
     warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
@@ -93,6 +104,43 @@ describe('ReportingMissingHandler in production', () => {
     const [message] = warnSpy.mock.calls[0];
     expect(message).toContain('nope.missing.key');
     expect(message).toContain('ar');
+  });
+});
+
+describe('eager fallback language loading', () => {
+  let transloco: TranslocoService;
+  let httpMock: HttpTestingController;
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideAppTranslation(),
+        { provide: IS_DEV_MODE, useValue: false },
+      ],
+    });
+    transloco = TestBed.inject(TranslocoService);
+    httpMock = TestBed.inject(HttpTestingController);
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+    httpMock.verify();
+  });
+
+  it('resolves a key missing from the active (Arabic) language through the eagerly loaded English cache - without the test priming English manually', () => {
+    transloco.setActiveLang('ar');
+
+    // provideAppTranslation() must have fired this request already, at
+    // startup, independent of which language is active. Flushing it is the
+    // ONLY way English enters TranslocoService's cache in this test - there
+    // is no transloco.setTranslation(..., 'en') call anywhere above.
+    httpMock.expectOne('/i18n/en.json').flush({ 'shell.language': 'Language' });
+
+    expect(transloco.translate('shell.language')).toBe('Language');
   });
 });
 

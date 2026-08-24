@@ -7,6 +7,7 @@ import {
   Injector,
   isDevMode,
   makeEnvironmentProviders,
+  provideEnvironmentInitializer,
 } from '@angular/core';
 import {
   provideTransloco,
@@ -114,5 +115,31 @@ export function provideAppTranslation(): EnvironmentProviders {
     }),
     provideTranslocoMessageformat(),
     provideTranslocoMissingHandler(ReportingMissingHandler),
+    /**
+     * ReportingMissingHandler's fallback branch resolves a miss against
+     * `transloco.getTranslation(DEFAULT_LANGUAGE)` (English) - but that only
+     * has anything in it if English's translation document has actually been
+     * fetched into TranslocoService's cache. Under this app's load-only-the-
+     * active-language strategy, if Arabic is active, `en.json` would
+     * otherwise never be requested, and "missing in Arabic, present in
+     * English" would degrade to "missing in both" (a raw key in the UI).
+     *
+     * `fallbackLang` above only tells the *default* missing-key resolution
+     * where to look; it does not, by itself, cause English to be fetched
+     * when a different language is active (confirmed experimentally - see
+     * transloco.config.spec.ts, "eager fallback language loading": without
+     * this initializer, the /i18n/en.json request never fires when Arabic is
+     * the active language). So request it explicitly, unconditionally, at
+     * startup, regardless of which language ends up active.
+     *
+     * `provideEnvironmentInitializer` (not `provideAppInitializer`) is used
+     * deliberately: it runs synchronously as soon as the environment
+     * injector is created - including under TestBed - rather than only when
+     * an application is actually bootstrapped, so this load is exercised the
+     * same way in tests as in a running app.
+     */
+    provideEnvironmentInitializer(() => {
+      inject(TranslocoService).load(DEFAULT_LANGUAGE).subscribe();
+    }),
   ]);
 }

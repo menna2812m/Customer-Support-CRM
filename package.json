@@ -9,7 +9,8 @@
     "gen:feature": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=type:feature --no-interactive",
     "gen:data-access": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=type:data-access --no-interactive",
     "gen:ui": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=type:ui --no-interactive",
-    "gen:model": "nx g @nx/js:library --unitTestRunner=vitest --bundler=none --tags=type:model --no-interactive"
+    "gen:model": "nx g @nx/js:library --unitTestRunner=vitest --bundler=none --tags=type:model --no-interactive",
+    "lint:bidi": "node tools/check-bidi-chars.mjs"
   },
   "repository": {
     "type": "git",
