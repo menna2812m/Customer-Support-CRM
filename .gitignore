@@ -1,1 +1,25 @@
 .superpowers/
+
+
+
+.nx/cache
+.nx/workspace-data
+.nx/migrate-runs
+.nx/polygraph
+.claude/worktrees
+.claude/settings.local.json
+node_modules
+
+.angular
+
+__screenshots__/
+
+vitest.config.*.timestamp*
+
+# --- Task 1: workspace-wide ignores (spec section 12.1) ---
+dist
+tmp
+coverage
+test-results
+playwright-report
+*.local
