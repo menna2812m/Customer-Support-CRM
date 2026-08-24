@@ -47,6 +47,11 @@ export class LanguageResolver {
   /**
    * On logout or user switch, drop the server preference and fall back to the
    * device preference, so the next user does not inherit the previous user's.
+   *
+   * Same behavior as `applyUnauthenticatedDefault` below - both delegate to
+   * this one implementation - but kept as two names because they express
+   * different intent at the call site: this one for "a session just ended",
+   * that one for "there was never a session to begin with".
    */
   onSessionEnded(): void {
     this.activate(this.resolveUnauthenticated());
@@ -54,7 +59,7 @@ export class LanguageResolver {
 
   /** Applies the pre-authentication default. Does not write device storage. */
   applyUnauthenticatedDefault(): void {
-    this.activate(this.resolveUnauthenticated());
+    this.onSessionEnded();
   }
 
   private activate(language: AppLanguage): void {

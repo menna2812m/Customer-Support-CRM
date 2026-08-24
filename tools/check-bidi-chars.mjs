@@ -33,7 +33,15 @@ import { extname } from 'node:path';
 // Written as explicit \uXXXX escapes, deliberately, rather than the literal
 // characters themselves - this file must not itself contain the very bidi
 // control characters it exists to detect.
+//
+// Two forms of the same pattern: a non-global one for a cheap whole-file
+// `.test()` short-circuit (a global regex's `.test()` is stateful across
+// calls via `lastIndex`, which is easy to misuse), and a factory for a fresh
+// global regex per line so every offending character on a line is reported,
+// not just the first (`RegExp.prototype.exec` without `/g` always returns
+// the same first match).
 const BIDI_CONTROL_PATTERN = /[\u202A-\u202E\u2066-\u2069\u200E\u200F\u061C]/u;
+const bidiControlPatternGlobal = () => /[\u202A-\u202E\u2066-\u2069\u200E\u200F\u061C]/gu;
 
 // Extensions that are legitimately binary: scanning them wastes time and
 // risks a coincidental byte sequence that happens to decode as one of the
@@ -55,40 +63,90 @@ function listTrackedFiles() {
   return output.split('\0').filter((path) => path.length > 0);
 }
 
-function findOffenses(filePath) {
+/**
+ * Scans one tracked file. Returns `{ offenses, readError }`:
+ *  - `offenses`: every bidi-control-character hit found, one entry per
+ *    occurrence (not just the first per line).
+ *  - `readError`: set when the file could not be read for any reason OTHER
+ *    than it simply not existing in the working tree. `ENOENT` on a tracked
+ *    path is a legitimate, if unusual, state (e.g. a sparse/partial
+ *    checkout) and is skipped quietly. Anything else - permission denied, an
+ *    I/O error, a path git thinks is a regular file but isn't - means a file
+ *    that DOES exist could not be scanned. Silently skipping that would
+ *    defeat the guard for exactly that file, so it is surfaced and made to
+ *    fail the run instead.
+ */
+function scanFile(filePath) {
   let buffer;
   try {
     buffer = readFileSync(filePath);
-  } catch {
-    // Tracked but unreadable in the working tree (e.g. a path git also
-    // tracks as deleted, or a broken symlink) - nothing to scan.
-    return [];
+  } catch (err) {
+    if (err && err.code === 'ENOENT') {
+      return { offenses: [], readError: null };
+    }
+    const detail = err && err.code ? err.code : String(err);
+    return { offenses: [], readError: `${filePath}: could not be read (${detail})` };
   }
 
   const text = buffer.toString('utf8');
   if (!BIDI_CONTROL_PATTERN.test(text)) {
-    return [];
+    return { offenses: [], readError: null };
   }
 
   const offenses = [];
   const lines = text.split(/\r\n|\r|\n/);
   lines.forEach((line, index) => {
-    const match = BIDI_CONTROL_PATTERN.exec(line);
-    if (match) {
+    for (const match of line.matchAll(bidiControlPatternGlobal())) {
       const codePoint = match[0].codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
       offenses.push(`${filePath}:${index + 1}: found U+${codePoint} (bidi control character)`);
     }
   });
-  return offenses;
+  return { offenses, readError: null };
 }
 
 function main() {
-  const files = listTrackedFiles().filter((path) => !SKIPPED_EXTENSIONS.has(extname(path).toLowerCase()));
+  const trackedFiles = listTrackedFiles();
 
-  const offenses = files.flatMap(findOffenses);
+  // Zero tracked files is never a legitimately clean result: it means this
+  // ran in the wrong working directory, against an uninitialized checkout,
+  // or some other broken invocation - having verified nothing, not having
+  // verified a clean repository. Fail loudly rather than reporting success.
+  if (trackedFiles.length === 0) {
+    console.error(
+      'lint:bidi FAILED - `git ls-files` returned zero tracked files.\n\n' +
+        'That means nothing was scanned, not that nothing was found. Likely causes: this was run ' +
+        'outside the repository working tree, against an uninitialized/partial checkout, or some ' +
+        'other broken invocation. Re-run from inside the repository you intend to scan.',
+    );
+    process.exitCode = 1;
+    return;
+  }
+
+  const files = trackedFiles.filter((path) => !SKIPPED_EXTENSIONS.has(extname(path).toLowerCase()));
+
+  const offenses = [];
+  const readErrors = [];
+  for (const file of files) {
+    const result = scanFile(file);
+    offenses.push(...result.offenses);
+    if (result.readError) {
+      readErrors.push(result.readError);
+    }
+  }
+
+  if (readErrors.length > 0) {
+    console.error('lint:bidi FAILED - could not read the following tracked file(s), so they could not be scanned:\n');
+    for (const readError of readErrors) {
+      console.error(`  ${readError}`);
+    }
+    console.error('\nA file this guard cannot read cannot be verified clean - fix the underlying access problem.');
+  }
 
   if (offenses.length > 0) {
-    console.error('lint:bidi FAILED - bidi control character(s) found (Trojan Source risk):\n');
+    console.error(
+      (readErrors.length > 0 ? '\n' : '') +
+        'lint:bidi FAILED - bidi control character(s) found (Trojan Source risk):\n',
+    );
     for (const offense of offenses) {
       console.error(`  ${offense}`);
     }
@@ -96,6 +154,9 @@ function main() {
       '\nThese are invisible directional-override/isolate characters, not legitimate Arabic or ' +
         'Hebrew script - remove them. See https://trojansource.codes/ for background.',
     );
+  }
+
+  if (readErrors.length > 0 || offenses.length > 0) {
     process.exitCode = 1;
     return;
   }

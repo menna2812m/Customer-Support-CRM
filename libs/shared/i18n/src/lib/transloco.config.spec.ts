@@ -128,6 +128,7 @@ describe('eager fallback language loading', () => {
 
   afterEach(() => {
     warnSpy.mockRestore();
+    vi.unstubAllGlobals();
     httpMock.verify();
   });
 
@@ -141,6 +142,38 @@ describe('eager fallback language loading', () => {
     httpMock.expectOne('/i18n/en.json').flush({ 'shell.language': 'Language' });
 
     expect(transloco.translate('shell.language')).toBe('Language');
+  });
+
+  it('reports (does not swallow) a failure to eagerly load the fallback language, and does not throw out of startup', () => {
+    // Transloco's own internal catchError also does a console.error, but it
+    // is gated behind `ngDevMode` (see node_modules/@jsverse/transloco -
+    // stripped out of a production build). Force that flag off so this
+    // assertion can ONLY be satisfied by this library's own error handling
+    // on the eager-load subscription, not by Transloco's dev-only logging -
+    // i.e. it proves this still works in the build configuration where the
+    // reviewed bug (silent, permanent loss of the English cache) would
+    // otherwise occur.
+    vi.stubGlobal('ngDevMode', false);
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    // Transloco's default failedRetries is 2, so the underlying HTTP source
+    // is subscribed to up to 3 times in total before it gives up. Since
+    // fallbackLang === defaultLang here, there is no further language for
+    // Transloco's own fallback strategy to try next, so the load ultimately
+    // errors (TranslationLoadError) rather than retrying forever.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      httpMock.expectOne('/i18n/en.json').flush('boom', { status: 500, statusText: 'Server Error' });
+    }
+
+    // Reported with enough detail to diagnose (the language, and the error),
+    // not just a bare "something went wrong" - and startup itself does not
+    // throw: reaching this line at all is part of the proof.
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    const [message, error] = errorSpy.mock.calls[0];
+    expect(message).toContain(DEFAULT_LANGUAGE);
+    expect(error).toBeDefined();
+
+    errorSpy.mockRestore();
   });
 });
 
