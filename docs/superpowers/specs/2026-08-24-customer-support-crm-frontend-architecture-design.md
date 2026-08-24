@@ -756,6 +756,33 @@ Phase 0 delivers:
 `DateRangePicker`, and comparable domain-driven components. Each is created when its first consuming
 domain requires it, so its API is shaped by a real use case rather than speculation.
 
+### 12.2 Phase 0 scope amendment — approved 2026-08-25
+
+Four items **originally inside the section 12.1 boundary** were deferred out of Phase 0 by the
+repository owner, to reach a stable platform sooner and begin Ticket Management. **The reduced
+Phase 0 is therefore narrower than the boundary section 12.1 describes.** This subsection is the
+record of that difference; section 12.1 above is left unedited as the original statement.
+
+| Deferred item | Moved to | Rationale |
+|---|---|---|
+| `shared/realtime` — connection manager, topic multiplexing, reconnect | Phase 2 (omnichannel) | No Phase 1 consumer. Live chat and notifications are what require a socket, and they arrive together |
+| `portal-app` wiring and its acceptance suite | Phase 4 (customer portal) | Different actor, different application, no Phase 1 dependency |
+| `DrawerService` | First tablet-panel consumer | Tablet side-panel collapsing is not a Phase 1 surface |
+| `ScopeContextService` + `HttpContext` scope policy | Front of Phase 1, gated on B1 | Blocked on the department/branch relationship regardless; ticket queues are the first genuinely scoped queries |
+
+**Consequences to carry forward.** Until these land:
+
+- No push updates exist. Anything needing live data polls, or waits for Phase 2.
+- `ACTIVE_SCOPE_PROVIDER` keeps its no-op default, so **no request carries scope parameters**. The
+  `HttpContext` opt-in mechanism exists and is tested; only the provider implementation is absent.
+- The customer portal has no shell. The `scope:agent` / `scope:portal` lint boundary is already
+  enforced and unaffected.
+
+**Not amended.** Security, permission enforcement, i18n/RTL, error handling, and contract
+correctness are unchanged. Phase 0 still completes only when the agent application boots
+authenticated, translated, and direction-correct in Arabic and English; permission denial routes to
+`/403`; and the boundary, logical-property, and bidi-control rules all demonstrably fire.
+
 ---
 
 ## 13. Open questions register
@@ -768,8 +795,8 @@ business rule. Each has an owner decision to make.
 | # | Question | Why it blocks |
 |---|---|---|
 | B1 | **Department and branch relationship.** Is a branch nested inside a department, a department inside a branch, or are they orthogonal dimensions? Can a user belong to several of each? | The shell's scope switcher, `ScopeContextService`, and the shape of every scoped query depend on this |
-| B2 | **Brand and design tokens.** Do brand colors, typography, and an existing visual identity exist? If not, explicit approval to proceed with temporary placeholder tokens is required | `shared/ui` generates the PrimeNG theme from tokens; changing the token model later is rework across every component |
-| B3 | **Browser support matrix.** | Determines availability of container queries, `:has()`, and logical-property fallbacks, which the layout and RTL strategy rely on |
+| ~~B2~~ | **RESOLVED 2026-08-25.** Use **temporary neutral semantic design tokens** for Phase 0. Do not invent final branding. Components must consume *semantic* tokens so final brand colors and typography can be substituted later without changing component code | Not blocking |
+| ~~B3~~ | **RESOLVED 2026-08-25.** Latest **2 major versions** of Chrome, Edge, Firefox, and Safari. **No Internet Explorer, no legacy Edge.** An implementation detail must never determine the matrix: if code is incompatible with it, change the code or add a compatible fallback | Not blocking |
 | B4 | **Canonical API contract ownership.** Where the contract lives permanently, who merges changes, and how frontend and backend both consume it | Section 8.5 requires one canonical contract; without an owner it forks immediately |
 
 ### 13.2 May remain open during Phase 0 — interim strategy defined
