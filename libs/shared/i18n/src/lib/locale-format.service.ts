@@ -58,9 +58,22 @@ export class LocaleFormatService {
    * ambiguous - parsing it would silently apply the viewer's local timezone
    * and produce a wrong time, which in a support CRM means a wrong SLA
    * deadline - so it is rejected loudly instead of silently reinterpreted.
+   *
+   * The timezone-suffix check above only validates the *shape* of the
+   * string's tail, not that the whole string is a real, parseable date (a
+   * string like "garbage-Z" passes the suffix check but is not a date). And
+   * a `Date` instance handed in directly skips the suffix check entirely, so
+   * an already-invalid `Date` (e.g. `new Date('nonsense')`) would otherwise
+   * flow straight through to the formatter. Both cases are rejected here
+   * explicitly, with a distinct message from the missing-timezone case, so a
+   * developer can tell which condition tripped instead of relying on
+   * `Intl.DateTimeFormat`'s own generic "Invalid time value" error.
    */
   private toDate(value: string | Date): Date {
     if (value instanceof Date) {
+      if (Number.isNaN(value.getTime())) {
+        throw new Error('Timestamp is an Invalid Date instance and cannot be formatted.');
+      }
       return value;
     }
     if (!/(?:Z|[+-]\d{2}:?\d{2})$/.test(value)) {
@@ -69,6 +82,12 @@ export class LocaleFormatService {
           `Timestamps are ISO-8601 UTC at the API boundary (spec section 8.5).`,
       );
     }
-    return new Date(value);
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      throw new Error(
+        `Timestamp "${value}" has timezone information but is not a valid date.`,
+      );
+    }
+    return date;
   }
 }

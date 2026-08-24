@@ -25,6 +25,22 @@ describe('LocaleFormatService', () => {
     expect(() => format.date(new Date('2026-08-24T09:30:00Z'))).not.toThrow();
   });
 
+  it('rejects a string with a timezone-shaped suffix but an unparseable body (Z suffix)', () => {
+    expect(() => format.date('garbage-Z')).toThrowError(/garbage-Z/);
+  });
+
+  it('rejects a string with a timezone-shaped suffix but an unparseable body (offset suffix)', () => {
+    expect(() => format.date('not-a-date+03:00')).toThrowError(/not-a-date\+03:00/);
+  });
+
+  it('accepts a valid offset timestamp - not collateral damage from the unparseable-body guard', () => {
+    expect(() => format.date('2026-08-24T09:30:00+03:00')).not.toThrow();
+  });
+
+  it('rejects an Invalid Date instance rather than rendering "Invalid Date"', () => {
+    expect(() => format.date(new Date('nonsense'))).toThrow();
+  });
+
   it('formats numbers differently per language without re-injection', () => {
     language.setLanguage('en');
     const english = format.number(1234.5);
