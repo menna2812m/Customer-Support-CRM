@@ -5,9 +5,9 @@ import {
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_LANGUAGE, isAppLanguage, provideAppTranslation, SUPPORTED_LANGUAGES } from '../index';
-import { HttpTranslationLoader } from './transloco.config';
+import { HttpTranslationLoader, IS_DEV_MODE } from './transloco.config';
 
 describe('application translation', () => {
   let transloco: TranslocoService;
@@ -52,6 +52,47 @@ describe('application translation', () => {
     transloco.setTranslation({ 'only.in.english': 'hello' }, 'en');
     transloco.setActiveLang('ar');
     expect(() => transloco.translate('only.in.english')).toThrowError(/only\.in\.english/);
+  });
+});
+
+describe('ReportingMissingHandler in production', () => {
+  let transloco: TranslocoService;
+  let warnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideAppTranslation(), { provide: IS_DEV_MODE, useValue: false }],
+    });
+    transloco = TestBed.inject(TranslocoService);
+    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    warnSpy.mockRestore();
+  });
+
+  it('falls back to the English translation when Arabic is missing the key', () => {
+    transloco.setTranslation({ 'shell.language': 'Language' }, 'en');
+    transloco.setActiveLang('ar');
+
+    expect(transloco.translate('shell.language')).toBe('Language');
+  });
+
+  it('returns the bare key when neither language has it', () => {
+    transloco.setActiveLang('ar');
+
+    expect(transloco.translate('nope.missing.key')).toBe('nope.missing.key');
+  });
+
+  it('reports the miss with the key and the active language', () => {
+    transloco.setActiveLang('ar');
+
+    transloco.translate('nope.missing.key');
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    const [message] = warnSpy.mock.calls[0];
+    expect(message).toContain('nope.missing.key');
+    expect(message).toContain('ar');
   });
 });
 

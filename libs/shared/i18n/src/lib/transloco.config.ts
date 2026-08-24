@@ -3,6 +3,8 @@ import {
   EnvironmentProviders,
   inject,
   Injectable,
+  InjectionToken,
+  Injector,
   isDevMode,
   makeEnvironmentProviders,
 } from '@angular/core';
@@ -12,6 +14,8 @@ import {
   Translation,
   TranslocoLoader,
   TranslocoMissingHandler,
+  TranslocoMissingHandlerData,
+  TranslocoService,
 } from '@jsverse/transloco';
 import { provideTranslocoMessageformat } from '@jsverse/transloco-messageformat';
 import { Observable } from 'rxjs';
@@ -32,26 +36,63 @@ export class HttpTranslationLoader implements TranslocoLoader {
 }
 
 /**
- * Missing keys throw in development so a missing string is caught immediately
- * rather than shipping. In production the raw key is returned as a safe,
- * visible placeholder instead of crashing the page (spec section 9.1).
+ * DI seam over Angular's global `isDevMode()` so tests can drive
+ * `ReportingMissingHandler`'s production branch without calling the
+ * process-global `enableProdMode()` (which would leak into every other
+ * test in the run - see task-5-report.md, Fix round 1). Defaults to the
+ * real `isDevMode()`; tests override this token directly instead.
+ */
+export const IS_DEV_MODE = new InjectionToken<boolean>('IS_DEV_MODE', {
+  factory: () => isDevMode(),
+});
+
+/**
+ * Missing keys throw in development so a missing string is caught
+ * immediately rather than shipping. In production, a miss:
  *
- * Transloco's built-in `missingHandler.useFallbackTranslation` is
- * deliberately left `false` (see `provideAppTranslation` below): that flag
- * resolves a miss against the fallback language *before* this handler ever
- * runs, so a key missing only in Arabic but present in English would render
- * silently instead of throwing here - exactly the loud-failure requirement
- * this handler exists to satisfy. Disabling it makes the handler the single,
- * deterministic place a missing key is decided, independent of which
- * language happens to have the string.
+ *  1. is reported (currently via `console.warn`, with the key and the
+ *     active language) so it stays discoverable instead of shipping to
+ *     Arabic users unnoticed. TODO(Task 13 - shared/observability): once
+ *     the observability abstraction exists, route this through it
+ *     instead of `console.warn`.
+ *  2. resolves to the fallback language's (English's) value for that key
+ *     when one exists,
+ *  3. and otherwise returns the bare key as the last-resort placeholder.
+ *
+ * This is deliberately NOT implemented via Transloco's own
+ * `missingHandler.useFallbackTranslation` flag (see `provideAppTranslation`
+ * below, kept `false`): that flag resolves a miss against the fallback
+ * language *before* this handler ever runs, so a miss would be silently
+ * swallowed - never reported, and never thrown in development either
+ * (confirmed experimentally - see task-5-report.md, Fix round 1).
  */
 @Injectable({ providedIn: 'root' })
 export class ReportingMissingHandler implements TranslocoMissingHandler {
-  handle(key: string): string {
-    if (isDevMode()) {
+  private readonly devMode = inject(IS_DEV_MODE);
+
+  // Resolved lazily via Injector.get() inside handle(), never injected
+  // directly as a constructor/field dependency: TranslocoService's own
+  // constructor depends on this class through TRANSLOCO_MISSING_HANDLER,
+  // so injecting TranslocoService eagerly here is a circular dependency
+  // - confirmed experimentally (NG0200) before settling on this approach;
+  // see task-5-report.md, Fix round 1.
+  private readonly injector = inject(Injector);
+
+  handle(key: string, data: TranslocoMissingHandlerData, params?: Record<string, unknown>): string {
+    if (this.devMode) {
       throw new Error(`Missing translation key: ${key}`);
     }
-    return key;
+
+    // TODO(Task 13 - shared/observability): route this through the
+    // observability abstraction once it exists; console.warn is the
+    // stand-in until then.
+    console.warn(`[i18n] Missing translation key "${key}" for language "${data.activeLang}".`);
+
+    const transloco = this.injector.get(TranslocoService);
+    const fallbackTranslations = transloco.getTranslation(DEFAULT_LANGUAGE);
+    const hasFallback = Object.prototype.hasOwnProperty.call(fallbackTranslations, key);
+
+    return hasFallback ? transloco.translate(key, params, DEFAULT_LANGUAGE) : key;
   }
 }
 
