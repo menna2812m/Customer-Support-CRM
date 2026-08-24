@@ -21,7 +21,7 @@ export async function loadAppConfig(url = '/config.json'): Promise<AppConfig> {
 
   const config = (await response.json()) as AppConfig;
 
-  const missing = REQUIRED_FIELDS.filter((field) => config?.[field] === undefined);
+  const missing = REQUIRED_FIELDS.filter((field) => config?.[field] == null);
   if (missing.length > 0) {
     throw new Error(`Runtime configuration is missing required field(s): ${missing.join(', ')}`);
   }

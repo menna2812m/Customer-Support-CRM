@@ -32,6 +32,11 @@ describe('loadAppConfig', () => {
     await expect(loadAppConfig()).rejects.toThrowError(/apiBaseUrl/);
   });
 
+  it('fails when a required field is null', async () => {
+    vi.stubGlobal('fetch', respondWith({ ...valid, apiBaseUrl: null }));
+    await expect(loadAppConfig()).rejects.toThrowError(/apiBaseUrl/);
+  });
+
   it('fails when the document carries a secret', async () => {
     vi.stubGlobal('fetch', respondWith({ ...valid, clientSecret: 'x' }));
     await expect(loadAppConfig()).rejects.toThrowError(/must not contain secrets/i);

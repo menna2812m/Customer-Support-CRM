@@ -17,8 +17,48 @@ export interface AppConfig {
 
 export const APP_CONFIG = new InjectionToken<AppConfig>('APP_CONFIG');
 
-const SECRET_KEY_PATTERN =
-  /(secret|password|passwd|private[_-]?key|credential|access[_-]?token|refresh[_-]?token|api[_-]?key)/i;
+/**
+ * Whole-word segments that mark a key as secret-shaped. Matched against key
+ * names split on camelCase boundaries, underscores, and hyphens — never as a
+ * raw substring — so that e.g. "passwordlessLoginEnabled" (segments:
+ * password-less, login, enabled) is accepted while "privateKey" (segments:
+ * private, key) is rejected.
+ */
+const SECRET_SEGMENTS = new Set([
+  'secret',
+  'secrets',
+  'password',
+  'passwd',
+  'pwd',
+  'credential',
+  'credentials',
+  'key',
+  'keys',
+  'token',
+  'tokens',
+]);
+
+/**
+ * Splits a key into lowercase segments on camelCase boundaries, underscores,
+ * and hyphens, e.g. "access_token" and "accessToken" both become
+ * ["access", "token"].
+ */
+function splitKeyIntoSegments(key: string): string[] {
+  return key
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+    .split(/[_-]+/)
+    .filter((segment) => segment.length > 0)
+    .map((segment) => segment.toLowerCase());
+}
+
+/**
+ * Whether a key name is secret-shaped, matched by whole segment rather than
+ * by substring (spec section 10.2).
+ */
+function isSecretShapedKey(key: string): boolean {
+  return splitKeyIntoSegments(key).some((segment) => SECRET_SEGMENTS.has(segment));
+}
 
 /**
  * Throws if the configuration carries a secret-shaped key at any depth.
@@ -33,7 +73,7 @@ export function assertNoSecrets(config: AppConfig): void {
     }
     for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
       const nextPath = path ? `${path}.${key}` : key;
-      if (SECRET_KEY_PATTERN.test(key)) {
+      if (isSecretShapedKey(key)) {
         offenders.push(nextPath);
       }
       walk(child, nextPath);
