@@ -75,6 +75,8 @@
     "@angular/forms": "~22.0.4",
     "@angular/platform-browser": "~22.0.4",
     "@angular/router": "~22.0.4",
+    "@jsverse/transloco": "^8.4.0",
+    "@jsverse/transloco-messageformat": "^8.4.0",
     "rxjs": "~7.8.0"
   }
 }
