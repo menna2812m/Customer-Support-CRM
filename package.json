@@ -5,7 +5,6 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "nx run-many -t test",
     "gen:shared": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=scope:shared,type:util --no-interactive",
     "gen:feature": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=type:feature --no-interactive",
     "gen:data-access": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=type:data-access --no-interactive",
