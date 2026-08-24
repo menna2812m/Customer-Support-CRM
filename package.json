@@ -1,12 +1,11 @@
 {
   "name": "crm",
   "version": "1.0.0",
-  "main": "index.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "nx run-many -t test",
     "gen:shared": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=scope:shared,type:util --no-interactive",
     "gen:feature": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=type:feature --no-interactive",
     "gen:data-access": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=type:data-access --no-interactive",

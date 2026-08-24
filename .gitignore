@@ -22,4 +22,4 @@ tmp
 coverage
 test-results
 playwright-report
-*.local.claude/settings.local.json
+*.local
