@@ -10,3 +10,7 @@ export * from './lib/overlay/toast.service';
 export * from './lib/state/empty-state.component';
 export * from './lib/state/error-state.component';
 export * from './lib/state/loading-skeleton.component';
+export * from './lib/shell/app-shell.component';
+export * from './lib/shell/language-switcher.component';
+export * from './lib/shell/responsive-gate.component';
+export * from './lib/shell/viewport.service';

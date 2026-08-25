@@ -6,7 +6,13 @@
     "notifications": "Notifications",
     "account": "Account",
     "signOut": "Sign out",
-    "reconnecting": "Reconnecting…"
+    "reconnecting": "Reconnecting…",
+    "navigation": "Main navigation",
+    "openOnLargerScreen": "This screen needs a larger display. Open it on a tablet or desktop.",
+    "languageName": {
+      "en": "English",
+      "ar": "العربية"
+    }
   },
   "errors": {
     "generic": "Something went wrong.",

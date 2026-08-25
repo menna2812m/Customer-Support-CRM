@@ -6,7 +6,13 @@
     "notifications": "الإشعارات",
     "account": "الحساب",
     "signOut": "تسجيل الخروج",
-    "reconnecting": "جارٍ إعادة الاتصال…"
+    "reconnecting": "جارٍ إعادة الاتصال…",
+    "navigation": "التنقل الرئيسي",
+    "openOnLargerScreen": "تحتاج هذه الشاشة إلى عرض أكبر. افتحها على جهاز لوحي أو حاسوب مكتبي.",
+    "languageName": {
+      "en": "English",
+      "ar": "العربية"
+    }
   },
   "errors": {
     "generic": "حدث خطأ ما.",
