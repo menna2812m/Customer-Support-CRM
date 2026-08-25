@@ -31,7 +31,12 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run agent-app:serve',
+    // Indirected through an npm script on purpose. With a bare `nx run
+    // agent-app:serve` here, the @nx/playwright plugin ALSO infers it as a
+    // dependency of this e2e target, Nx starts it, Playwright starts it again
+    // inside that chain, and Nx aborts the run as a recursive task invocation.
+    // One owner of the dev server, and it is Playwright.
+    command: 'npm run serve:agent-app',
     url: 'http://localhost:4200',
     reuseExistingServer: true,
     cwd: workspaceRoot

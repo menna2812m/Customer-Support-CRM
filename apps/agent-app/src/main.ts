@@ -2,11 +2,11 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { loadAppConfig } from '@crm/shared/config';
 import { AppComponent } from './app/app.component';
 import { buildAppConfig } from './app/app.config';
+import { startMocks } from './mocks/start-mocks';
 
-loadAppConfig()
-  .then((runtime) =>
-    bootstrapApplication(AppComponent, buildAppConfig(runtime)),
-  )
+startMocks()
+  .then(() => loadAppConfig())
+  .then((runtime) => bootstrapApplication(AppComponent, buildAppConfig(runtime)))
   .catch((error) => {
     // Configuration failure is fatal and must be visible, not silent.
     console.error('Application configuration failed to load.', error);

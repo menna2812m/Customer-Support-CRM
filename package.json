@@ -11,7 +11,9 @@
     "gen:ui": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=type:ui --no-interactive",
     "gen:model": "nx g @nx/js:library --unitTestRunner=vitest --bundler=none --tags=type:model --no-interactive",
     "lint:bidi": "node tools/check-bidi-chars.mjs",
-    "lint:styles": "stylelint \"{apps,libs}/**/*.scss\""
+    "lint:styles": "stylelint \"{apps,libs}/**/*.scss\"",
+    "serve:agent-app": "nx run agent-app:serve",
+    "serve:portal-app": "nx run portal-app:serve"
   },
   "repository": {
     "type": "git",
@@ -85,5 +87,10 @@
     "@primeuix/themes": "^3.0.0",
     "primeng": "^22.0.0",
     "rxjs": "~7.8.0"
+  },
+  "msw": {
+    "workerDirectory": [
+      "apps\\agent-app\\public"
+    ]
   }
 }

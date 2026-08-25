@@ -31,7 +31,10 @@ export default defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'npx nx run portal-app:serve',
+    // See the agent-app-e2e config: a bare `nx run` here is inferred as a
+    // dependency of this target AND run again by Playwright, which Nx aborts
+    // as a recursive task invocation.
+    command: 'npm run serve:portal-app',
     url: 'http://localhost:4200',
     reuseExistingServer: true,
     cwd: workspaceRoot,

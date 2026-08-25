@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - run: npm ci
+
+      # All three engines, not just chromium: the supported matrix (open
+      # question B3) is the latest two majors of Chrome, Edge, Firefox, and
+      # Safari, and an acceptance suite that only ever runs on Blink cannot
+      # speak to three quarters of it.
+      - run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Derive the affected range
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Lint (TypeScript, module boundaries, PrimeNG restriction)
+        run: npx nx affected -t lint
+
+      - name: Lint styles (logical properties)
+        run: npm run lint:styles
+
+      - name: Lint bidi control characters
+        run: npm run lint:bidi
+
+      - name: Unit and component tests
+        run: npx nx affected -t test
+
+      - name: Build
+        run: npx nx affected -t build
+
+      - name: End-to-end (both locales and directions)
+        run: npx nx affected -t e2e
+
+      # Bundle budgets are NOT gated yet. They are baselined after Phase 0 and
+      # the first production-like feature, then enabled (spec section 10.6).
+      - name: Record bundle sizes for baselining
+        run: |
+          echo "## Bundle sizes (informational, not gated)" >> "$GITHUB_STEP_SUMMARY"
+          du -sh dist/apps/*/browser 2>/dev/null >> "$GITHUB_STEP_SUMMARY" || true
