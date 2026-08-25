@@ -19,5 +19,14 @@
   "state": {
     "empty": "Nothing to show",
     "loading": "Loading…"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Enter a valid email address",
+    "minlength": "This value is too short",
+    "maxlength": "This value is too long",
+    "min": "This value is too small",
+    "max": "This value is too large",
+    "pattern": "This value has the wrong format"
   }
 }

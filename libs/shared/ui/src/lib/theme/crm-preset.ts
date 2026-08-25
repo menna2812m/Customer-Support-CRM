@@ -50,8 +50,10 @@ export const CrmPreset = definePreset(Aura, {
       950: 'color-mix(in srgb, var(--crm-color-primary) 30%, var(--crm-color-text))',
       color: 'var(--crm-color-primary)',
       contrastColor: 'var(--crm-color-primary-contrast)',
-      hoverColor: 'color-mix(in srgb, var(--crm-color-primary) 86%, var(--crm-color-text))',
-      activeColor: 'color-mix(in srgb, var(--crm-color-primary) 72%, var(--crm-color-text))',
+      hoverColor:
+        'color-mix(in srgb, var(--crm-color-primary) 86%, var(--crm-color-text))',
+      activeColor:
+        'color-mix(in srgb, var(--crm-color-primary) 72%, var(--crm-color-text))',
     },
     surface: {
       0: 'var(--crm-color-surface)',

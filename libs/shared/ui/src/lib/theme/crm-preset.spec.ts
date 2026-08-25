@@ -9,21 +9,28 @@ import { CrmPreset } from './crm-preset';
  */
 describe('CrmPreset', () => {
   const semantic = CrmPreset.semantic as Record<string, Record<string, string>>;
-  const primitive = CrmPreset.primitive as Record<string, Record<string, string>>;
+  const primitive = CrmPreset.primitive as Record<
+    string,
+    Record<string, string>
+  >;
 
   function colorValues(value: unknown): string[] {
     if (typeof value === 'string') {
       return [value];
     }
     if (value && typeof value === 'object') {
-      return Object.values(value as Record<string, unknown>).flatMap(colorValues);
+      return Object.values(value as Record<string, unknown>).flatMap(
+        colorValues,
+      );
     }
     return [];
   }
 
   it('drives the primary role colours from tokens', () => {
     expect(semantic['primary']['color']).toBe('var(--crm-color-primary)');
-    expect(semantic['primary']['contrastColor']).toBe('var(--crm-color-primary-contrast)');
+    expect(semantic['primary']['contrastColor']).toBe(
+      'var(--crm-color-primary-contrast)',
+    );
     expect(semantic['text']['color']).toBe('var(--crm-color-text)');
     expect(semantic['text']['mutedColor']).toBe('var(--crm-color-text-muted)');
     expect(semantic['focusRing']['color']).toBe('var(--crm-color-focus-ring)');
@@ -44,9 +51,9 @@ describe('CrmPreset', () => {
   });
 
   describe.each(['primary', 'surface'])('the %s ramp', (ramp) => {
-    const steps = Object.keys(Aura.semantic[ramp] as Record<string, string>).filter((key) =>
-      /^\d+$/.test(key),
-    );
+    const steps = Object.keys(
+      Aura.semantic[ramp] as Record<string, string>,
+    ).filter((key) => /^\d+$/.test(key));
 
     it('remaps every step Aura defines, leaving no primitive palette reference', () => {
       expect(steps.length).toBeGreaterThan(0);
@@ -55,15 +62,19 @@ describe('CrmPreset', () => {
         expect(semantic[ramp][step]).toBeDefined();
       }
 
-      expect(colorValues(semantic[ramp]).filter((value) => /\{[a-z]+\.\d+\}/.test(value))).toEqual(
-        [],
-      );
+      expect(
+        colorValues(semantic[ramp]).filter((value) =>
+          /\{[a-z]+\.\d+\}/.test(value),
+        ),
+      ).toEqual([]);
     });
 
     it('resolves every step through a token rather than a literal colour', () => {
       for (const step of steps) {
         expect(semantic[ramp][step]).toContain('var(--crm-color-');
-        expect(semantic[ramp][step]).not.toMatch(/#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(/i);
+        expect(semantic[ramp][step]).not.toMatch(
+          /#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(/i,
+        );
       }
     });
   });
