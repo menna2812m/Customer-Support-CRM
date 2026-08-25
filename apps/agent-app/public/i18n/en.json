@@ -20,7 +20,10 @@
     "notFound": "That page does not exist.",
     "offline": "You appear to be offline.",
     "retry": "Try again",
-    "copyTraceId": "Copy reference"
+    "copyTraceId": "Copy reference",
+    "auth": {
+      "sign_in_failed": "Sign-in did not complete."
+    }
   },
   "state": {
     "empty": "Nothing to show",
@@ -40,5 +43,26 @@
     "cancel": "Cancel",
     "save": "Save",
     "close": "Close"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "tickets": "Tickets",
+    "customers": "Customers",
+    "kb": "Knowledge base",
+    "reports": "Reports",
+    "admin": "Administration",
+    "users": "Users",
+    "roles": "Roles",
+    "departments": "Departments",
+    "branches": "Branches",
+    "sla": "Service levels",
+    "escalation": "Escalation",
+    "channels": "Channels",
+    "integrations": "Integrations",
+    "audit": "Audit log",
+    "notifications": "Notifications"
+  },
+  "auth": {
+    "signIn": "Sign in"
   }
 }

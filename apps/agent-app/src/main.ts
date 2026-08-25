@@ -1,7 +1,14 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { App } from './app/app';
+import { loadAppConfig } from '@crm/shared/config';
+import { AppComponent } from './app/app.component';
+import { buildAppConfig } from './app/app.config';
 
-bootstrapApplication(App, appConfig).catch((err) =>
-  console.error(err)
-);
+loadAppConfig()
+  .then((runtime) =>
+    bootstrapApplication(AppComponent, buildAppConfig(runtime)),
+  )
+  .catch((error) => {
+    // Configuration failure is fatal and must be visible, not silent.
+    console.error('Application configuration failed to load.', error);
+    document.body.textContent = 'Application configuration failed to load.';
+  });
