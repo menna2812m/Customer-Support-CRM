@@ -28,5 +28,11 @@
     "min": "This value is too small",
     "max": "This value is too large",
     "pattern": "This value has the wrong format"
+  },
+  "actions": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close"
   }
 }
