@@ -1,0 +1,20 @@
+// Arabic and Latin get separate stacks with different leading. Arabic needs more
+// leading at the same nominal size; one stack for both is what makes bilingual
+// interfaces look subtly wrong (spec section 9.4).
+
+:root {
+  --crm-font-family-latin: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --crm-font-family-arabic: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', 'Segoe UI', sans-serif;
+  --crm-line-height-latin: 1.5;
+  --crm-line-height-arabic: 1.75;
+}
+
+html[lang='en'] body {
+  font-family: var(--crm-font-family-latin);
+  line-height: var(--crm-line-height-latin);
+}
+
+html[lang='ar'] body {
+  font-family: var(--crm-font-family-arabic);
+  line-height: var(--crm-line-height-arabic);
+}

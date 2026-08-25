@@ -1,0 +1,30 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "strict": true,
+    "paths": {
+      "@crm/shared/config": ["./libs/shared/config/src/index.ts"],
+      "@crm/shared/testing": ["./libs/shared/testing/src/index.ts"],
+      "@crm/shared/testing/browser": ["./libs/shared/testing/src/browser.ts"],
+      "@crm/shared/http": ["./libs/shared/http/src/index.ts"],
+      "@crm/shared/i18n": ["./libs/shared/i18n/src/index.ts"],
+      "@crm/shared/auth": ["./libs/shared/auth/src/index.ts"],
+      "@crm/shared/permissions": ["./libs/shared/permissions/src/index.ts"],
+      "@crm/shared/observability": ["./libs/shared/observability/src/index.ts"],
+      "@crm/shared/ui": ["./libs/shared/ui/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

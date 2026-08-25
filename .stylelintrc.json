@@ -1,0 +1,30 @@
+{
+  "extends": ["stylelint-config-standard-scss"],
+  "reportDescriptionlessDisables": true,
+  "rules": {
+    "property-disallowed-list": [
+      [
+        "margin-left",
+        "margin-right",
+        "padding-left",
+        "padding-right",
+        "border-left",
+        "border-right",
+        "left",
+        "right",
+        "border-top-left-radius",
+        "border-top-right-radius",
+        "border-bottom-left-radius",
+        "border-bottom-right-radius"
+      ],
+      {
+        "message": "Use logical properties (margin-inline-start, inset-inline-end, border-start-start-radius). Physical properties require a documented stylelint-disable with a description (spec section 9.3)."
+      }
+    ],
+    "declaration-property-value-disallowed-list": {
+      "text-align": ["left", "right"],
+      "float": ["left", "right"],
+      "clear": ["left", "right"]
+    }
+  }
+}
