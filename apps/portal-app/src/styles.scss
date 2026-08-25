@@ -1,1 +1,13 @@
-/* You can add global styles to this file, and also import other style files */
+@use '../../../libs/shared/ui/src/styles/tokens';
+@use '../../../libs/shared/ui/src/styles/typography';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--crm-color-surface);
+  color: var(--crm-color-text);
+  font-size: var(--crm-font-size-md);
+}

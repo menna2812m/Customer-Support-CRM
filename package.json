@@ -10,7 +10,8 @@
     "gen:data-access": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=type:data-access --no-interactive",
     "gen:ui": "nx g @nx/angular:library --unitTestRunner=vitest-analog --standalone --skipModule --tags=type:ui --no-interactive",
     "gen:model": "nx g @nx/js:library --unitTestRunner=vitest --bundler=none --tags=type:model --no-interactive",
-    "lint:bidi": "node tools/check-bidi-chars.mjs"
+    "lint:bidi": "node tools/check-bidi-chars.mjs",
+    "lint:styles": "stylelint \"{apps,libs}/**/*.scss\""
   },
   "repository": {
     "type": "git",
@@ -62,6 +63,8 @@
     "msw": "^2.15.0",
     "nx": "23.1.1",
     "prettier": "~3.6.2",
+    "stylelint": "^17.14.1",
+    "stylelint-config-standard-scss": "^17.0.0",
     "tslib": "^2.3.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.58.0",
@@ -79,6 +82,8 @@
     "@angular/router": "~22.0.4",
     "@jsverse/transloco": "^8.4.0",
     "@jsverse/transloco-messageformat": "^8.4.0",
+    "@primeuix/themes": "^3.0.0",
+    "primeng": "^22.0.0",
     "rxjs": "~7.8.0"
   }
 }

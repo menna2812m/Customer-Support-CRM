@@ -1,0 +1,45 @@
+// Design tokens. Every component reads these; the PrimeNG theme is generated
+// FROM them, so theming and a future dark mode never touch component code
+// (spec section 9.4).
+// TEMPORARY NEUTRAL SEMANTIC VALUES. Open question B2 was resolved on
+// 2026-08-25 as "temporary neutral semantic tokens, no invented branding":
+// components consume the semantic names below, so final brand colors and
+// typography are substituted here and nowhere else.
+
+:root {
+  // --- color ---
+  --crm-color-surface: #fff;
+  --crm-color-surface-raised: #f7f8fa;
+  --crm-color-surface-sunken: #eef0f4;
+  --crm-color-border: #d8dce4;
+  --crm-color-text: #1b1f27;
+  --crm-color-text-muted: #5a6270;
+  --crm-color-primary: #1f6feb;
+  --crm-color-primary-contrast: #fff;
+  --crm-color-danger: #c0362c;
+  --crm-color-warning: #a8630b;
+  --crm-color-success: #1a7f52;
+  --crm-color-focus-ring: #1f6feb;
+
+  // --- spacing ---
+  --crm-space-1: 0.25rem;
+  --crm-space-2: 0.5rem;
+  --crm-space-3: 0.75rem;
+  --crm-space-4: 1rem;
+  --crm-space-6: 1.5rem;
+  --crm-space-8: 2rem;
+
+  // --- radius ---
+  --crm-radius-sm: 0.25rem;
+  --crm-radius-md: 0.5rem;
+  --crm-radius-lg: 0.75rem;
+
+  // --- elevation ---
+  --crm-elevation-1: 0 1px 2px rgb(0 0 0 / 8%);
+  --crm-elevation-2: 0 4px 12px rgb(0 0 0 / 12%);
+
+  // --- typography ---
+  --crm-font-size-sm: 0.875rem;
+  --crm-font-size-md: 1rem;
+  --crm-font-size-lg: 1.25rem;
+}

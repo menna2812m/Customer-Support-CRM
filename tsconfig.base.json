@@ -21,7 +21,8 @@
       "@crm/shared/i18n": ["./libs/shared/i18n/src/index.ts"],
       "@crm/shared/auth": ["./libs/shared/auth/src/index.ts"],
       "@crm/shared/permissions": ["./libs/shared/permissions/src/index.ts"],
-      "@crm/shared/observability": ["./libs/shared/observability/src/index.ts"]
+      "@crm/shared/observability": ["./libs/shared/observability/src/index.ts"],
+      "@crm/shared/ui": ["./libs/shared/ui/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
